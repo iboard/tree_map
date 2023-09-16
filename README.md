@@ -1,4 +1,7 @@
-# TreeMap
+# README 
+## TreeMap 0.1
+
+[![Elixir CI](https://github.com/iboard/tree_map/actions/workflows/elixir.yml/badge.svg)](https://github.com/iboard/tree_map/actions/workflows/elixir.yml)
 
 A module to maintain a tree of the structure
 
