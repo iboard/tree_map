@@ -1,10 +1,11 @@
 defmodule TreeMapTest do
   use ExUnit.Case
   doctest TreeMap
+  alias TreeMap.Node
 
   test "initialize a TreeMap" do
-    assert TreeMap.new() == %TreeMap{key: nil, value: nil, children: []}
-    assert TreeMap.new(1, :foo) == %TreeMap{key: 1, value: :foo, children: []}
+    assert TreeMap.new() == %Node{key: nil, value: nil, children: []}
+    assert TreeMap.new(1, :foo) == %Node{key: 1, value: :foo, children: []}
   end
 
   test "add child" do

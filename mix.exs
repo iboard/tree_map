@@ -4,7 +4,7 @@ defmodule TreeMap.MixProject do
   def project do
     [
       app: :tree_map,
-      version: "0.1.0",
+      version: "0.1.2",
       elixir: "~> 1.15",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
@@ -24,7 +24,8 @@ defmodule TreeMap.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: [:logger, :runtime_tools, :wx, :observer],
+      mod: {TreeMap.Application, []}
     ]
   end
 

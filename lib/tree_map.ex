@@ -3,7 +3,7 @@ defmodule TreeMap do
   A module to maintain a tree of the structure
 
   ```elixir
-  %TreeMap{ key: ..., value: ..., children: [%TreeMap{},...]}
+  %Node{ key: ..., value: ..., children: [%TreeMap{},...]}
   ```
 
   and functions to traverse such a tree.
@@ -26,20 +26,20 @@ defmodule TreeMap do
   ```
   """
 
-  defstruct key: nil, value: nil, children: []
+  alias TreeMap.{Node, RootServer}
 
   @doc """
   ### Examples
 
       iex> TreeMap.new()
-      %TreeMap{}
+      %TreeMap.Node{}
 
       iex> TreeMap.new(123, "hundretandtwentythree")
-      %TreeMap{ key: 123, value: "hundretandtwentythree"}
+      %TreeMap.Node{ key: 123, value: "hundretandtwentythree"}
 
   """
   def new(key \\ nil, value \\ nil, children \\ []) do
-    %TreeMap{key: key, value: value, children: children}
+    %Node{key: key, value: value, children: children}
   end
 
   @doc """
@@ -52,7 +52,7 @@ defmodule TreeMap do
 
   ### Example:
       iex> TreeMap.new("1", "Root") |> TreeMap.add_child("1.1", "Sub One")
-      %TreeMap{key: "1", value: "Root", children: [%TreeMap{key: "1.1", value: "Sub One"}]}
+      %TreeMap.Node{key: "1", value: "Root", children: [%TreeMap.Node{key: "1.1", value: "Sub One"}]}
   """
   def add_child(tree_map, key, value, children \\ []) do
     %{tree_map | children: [new(key, value, children) | tree_map.children]}
@@ -64,7 +64,7 @@ defmodule TreeMap do
   ### Example:
       iex> child = TreeMap.new("0", "I exist")
       iex> TreeMap.new("1", "Root") |> TreeMap.add_child(child)
-      %TreeMap{key: "1", value: "Root", children: [%TreeMap{key: "0", value: "I exist"}]}
+      %TreeMap.Node{key: "1", value: "Root", children: [%TreeMap.Node{key: "0", value: "I exist"}]}
   """
   def add_child(tree_map, child) do
     %{tree_map | children: [child | tree_map.children]}
@@ -121,11 +121,57 @@ defmodule TreeMap do
   end
 
   @doc """
-  Find a node by it's key or returns `false`
+  Find a node by it's key or returns `false` in a given tree.
   """
   def find(tree_map, key) do
     transduce(tree_map, nil, fn a, n -> a || (n.key == key && n) end, fn n, acc ->
       (n.key == key && n) || acc
     end)
+  end
+
+  @doc """
+  Find a node by it's key or returns `false` in all root nodes.
+  """
+  def find(key) do
+    list_roots()
+    |> Enum.reduce(false, fn node, found ->
+      found || find(node, key)
+    end)
+  end
+
+  @doc """
+  Create a Node and start a RootServer for it.
+  """
+  def start_root_node(key, value) do
+    node = new(key, value)
+    RootServer.start_child(node)
+  end
+
+  @doc """
+  Start a root_node for the given `%Node{}`.
+  """
+  def start_root_node(node) do
+    RootServer.start_child(node)
+  end
+
+  @doc """
+  Retreive the value of a given root node.
+  """
+  def value(root_pid) do
+    Node.value(root_pid)
+  end
+
+  @doc """
+  List all root nodes from all RootServers.
+  """
+  def list_roots() do
+    RootServer.list_roots()
+  end
+
+  @doc """
+  Kill all RootServers.
+  """
+  def drop_all() do
+    RootServer.drop_all()
   end
 end

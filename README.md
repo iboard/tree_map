@@ -1,17 +1,21 @@
 # README 
 ## TreeMap 0.1
 
-[![Elixir CI](https://github.com/iboard/tree_map/actions/workflows/elixir.yml/badge.svg)](https://github.com/iboard/tree_map/actions/workflows/elixir.yml)
 
-A module to maintain a tree of the structure
+[![Elixir CI](https://github.com/iboard/tree_map/actions/workflows/elixir.yml/badge.svg)](https://github.com/iboard/tree_map/actions/workflows/elixir.yml)
+[![Package version](http://img.shields.io/hexpm/v/tree_map.svg?style=flat)](https://hex.pm/packages/tree_map)
+[![Package documentation](http://img.shields.io/badge/hex.pm-docs-green.svg?style=flat)](https://hexdocs.pm/tree_map)
+
+A module to maintain a tree of the structure `TreeMap.Node` and to start root-nodes as 
+supervised children of `TreeMap.RootServer`.
+
+### Node Structure
 
 ```elixir
-  %TreeMap{ key: ..., value: ..., children: [%TreeMap{},...]}
+  %Node{ key: ..., value: ..., children: [%Node{},...]}
 ```
 
-and functions to traverse such a tree.
-
-### Examples
+### Function to traverse `%Node{}`
 
 ```elixir
  root =
@@ -28,10 +32,26 @@ and functions to traverse such a tree.
  assert expected == received
 ```
 
+### RootServer
+
+`TreeMap.RootServer` is a `DynamicSupervisor` that can be used to maintain a tree of `TreeMap` nodes.
+
+    iex> TreeMap.start_root_node("A", "Root")
+    {:ok, pid}
+
+    iex> TreeMap.list_roots()
+    [%Node{}, ...]
+
+    iex> TreeMap.find("key")
+    %Node{}
+
+    iex> TreeMap.drop_all()
+    [:ok, ...]
+
 
 ## Installation
 
-[Available in Hex](https://hexdocs.pm/tree_map/api-reference.html), the package can be 
+[Available in Hex](https://hex.pm/packages/tree_map), the package can be 
 installed by adding `tree_map` to your list of dependencies in `mix.exs`:
 
 ```elixir
