@@ -1,6 +1,8 @@
 defmodule TreeMapServerTest do
   use ExUnit.Case
 
+  alias TreeMap.Node
+
   describe "OTP basics" do
     setup %{} do
       TreeMap.drop_all()
@@ -58,16 +60,52 @@ defmodule TreeMapServerTest do
     end
   end
 
+  describe "All nodes are processes" do
+    setup %{} do
+      TreeMap.drop_all()
+
+      {:ok, project_one} = TreeMap.start_root_node("1", "Project One")
+      {:ok, subproject_one_one} = TreeMap.start_root_node("1.1", "Subproject One One")
+      {:ok, subproject_one_two} = TreeMap.start_root_node("1.2", "Subproject One Two")
+      {:ok, project_two} = TreeMap.start_root_node("2", "Project Two")
+      {:ok, subproject_two_one} = TreeMap.start_root_node("2.1", "Subproject Two One")
+
+      TreeMap.add_child(project_one, subproject_one_one)
+      TreeMap.add_child(project_one, subproject_one_two)
+      TreeMap.add_child(project_two, subproject_two_one)
+
+      :ok
+    end
+
+    test "Find node" do
+      node = TreeMap.find("1.1")
+      assert node.value == "Subproject One One"
+    end
+
+    test "Find roots only" do
+      assert ["1", "2"] ==
+               TreeMap.list_roots()
+               |> Enum.map(&Node.key/1)
+    end
+
+    test "list all nodes with servers" do
+      assert ["1", "1.1", "1.2", "2", "2.1"] ==
+               TreeMap.list_all()
+               |> Enum.map(&Node.key/1)
+    end
+  end
+
   defp create_family_tree(name \\ "Prokop")
 
   defp create_family_tree("Altendorfer") do
-    TreeMap.new("2", "Altendorfer", [
-      TreeMap.new("2.1", "Rudolf"),
-      TreeMap.new("2.2", "Grete", [
-        TreeMap.new("2.2.1", "Rudi"),
-        TreeMap.new("2.2.2", "Andreas")
-      ])
-    ])
+    grete =
+      TreeMap.new("2.2", "Grete")
+      |> TreeMap.add_child(TreeMap.new("2.2.1", "Rudi"))
+      |> TreeMap.add_child(TreeMap.new("2.2.2", "Andreas"))
+
+    TreeMap.new("2", "Altendorfer")
+    |> TreeMap.add_child(TreeMap.new("2.1", "Rudolf"))
+    |> TreeMap.add_child(grete)
   end
 
   defp create_family_tree("Prokop") do
@@ -77,14 +115,18 @@ defmodule TreeMapServerTest do
 
     jan = TreeMap.new("1.1.1.1", "Jan")
     hanna = TreeMap.new("1.1.1.2", "Hanna")
-    elke = TreeMap.new("1.1.1", "Elke", [jan, hanna])
+    elke = TreeMap.new("1.1.1", "Elke") |> TreeMap.add_child(jan) |> TreeMap.add_child(hanna)
 
     julian = TreeMap.new("1.1.2.1", "Julian")
     alex = TreeMap.new("1.1.2.2", "Alex")
-    heidi = TreeMap.new("1.1.2", "Heidi", [julian, alex])
+    heidi = TreeMap.new("1.1.2", "Heidi") |> TreeMap.add_child(julian) |> TreeMap.add_child(alex)
 
-    gerda = TreeMap.new("1.1", "Gerda", [elke, heidi, margit])
+    gerda =
+      TreeMap.new("1.1", "Gerda")
+      |> TreeMap.add_child(elke)
+      |> TreeMap.add_child(heidi)
+      |> TreeMap.add_child(margit)
 
-    TreeMap.new("1", "Prokop", [helmut, gerda])
+    TreeMap.new("1", "Prokop") |> TreeMap.add_child(helmut) |> TreeMap.add_child(gerda)
   end
 end

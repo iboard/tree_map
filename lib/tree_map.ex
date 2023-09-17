@@ -52,22 +52,44 @@ defmodule TreeMap do
 
   ### Example:
       iex> TreeMap.new("1", "Root") |> TreeMap.add_child("1.1", "Sub One")
-      %TreeMap.Node{key: "1", value: "Root", children: [%TreeMap.Node{key: "1.1", value: "Sub One"}]}
+      %TreeMap.Node{key: "1", value: "Root", children: [%TreeMap.Node{key: "1.1", value: "Sub One", parent: "1", children: []}]}
   """
   def add_child(tree_map, key, value, children \\ []) do
-    %{tree_map | children: [new(key, value, children) | tree_map.children]}
+    %{
+      tree_map
+      | children: [%{new(key, value, children) | parent: Node.key(tree_map)} | tree_map.children]
+    }
   end
 
   @doc """
   Prepend an exisitng child to the children of this node.
 
   ### Example:
-      iex> child = TreeMap.new("0", "I exist")
+      iex> child = TreeMap.new("1.1", "I exist")
       iex> TreeMap.new("1", "Root") |> TreeMap.add_child(child)
-      %TreeMap.Node{key: "1", value: "Root", children: [%TreeMap.Node{key: "0", value: "I exist"}]}
+      %TreeMap.Node{key: "1", value: "Root", parent: nil, children: [%TreeMap.Node{key: "1.1", parent: "1", value: "I exist", children: []}]}
   """
-  def add_child(tree_map, child) do
-    %{tree_map | children: [child | tree_map.children]}
+  def add_child(tree_map, child_pid) when is_pid(tree_map) and is_pid(child_pid) do
+    node = Node.get_node(tree_map)
+    child = %{Node.get_node(child_pid) | parent: Node.key(tree_map)}
+    node = add_child(node, child)
+    Node.update(child_pid, child)
+    Node.update(tree_map, node)
+  end
+
+  def add_child(tree_map, child_pid) when is_map(tree_map) and is_pid(child_pid) do
+    child = %{Node.get_node(child_pid) | parent: Node.key(tree_map)}
+    Node.update(child_pid, child)
+    add_child(tree_map, child)
+  end
+
+  def add_child(tree_map, child) when is_pid(tree_map) and is_map(child) do
+    node = Node.get_node(tree_map) |> add_child(child)
+    Node.update(tree_map, node)
+  end
+
+  def add_child(tree_map, child) when is_map(tree_map) and is_map(child) do
+    add_child(tree_map, child.key, child.value, child.children)
   end
 
   @doc """
@@ -114,6 +136,10 @@ defmodule TreeMap do
       ...> |> Enum.map(& &1.key)
       ["1", "1.1", "1.1.1", "1.2", "1.2.1"]
   """
+  def transduce(tree_map, acc, modifier, reducer) when is_pid(tree_map) do
+    Node.get_node(tree_map) |> transduce(acc, modifier, reducer)
+  end
+
   def transduce(tree_map, acc, modifier, reducer) do
     Enum.reduce(Enum.reverse(tree_map.children), modifier.(acc, tree_map), fn n, a ->
       transduce(n, a, modifier, reducer)
@@ -155,6 +181,13 @@ defmodule TreeMap do
   end
 
   @doc """
+  Retreive the key of a given root node.
+  """
+  def key(root_pid) do
+    Node.key(root_pid)
+  end
+
+  @doc """
   Retreive the value of a given root node.
   """
   def value(root_pid) do
@@ -162,10 +195,24 @@ defmodule TreeMap do
   end
 
   @doc """
+  Retreive the parent of a given root node.
+  """
+  def parent(root_pid) do
+    Node.parent(root_pid)
+  end
+
+  @doc """
   List all root nodes from all RootServers.
   """
   def list_roots() do
     RootServer.list_roots()
+  end
+
+  @doc """
+  List all nodes from all RootServers.
+  """
+  def list_all() do
+    RootServer.list_all()
   end
 
   @doc """

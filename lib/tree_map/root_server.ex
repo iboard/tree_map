@@ -39,11 +39,21 @@ defmodule TreeMap.RootServer do
   end
 
   @doc """
-  Return the root node of each child.
+  Return the root node of each child which has no parent (roots).
   """
   def list_roots() do
     for {:undefined, pid, :worker, [TreeMap.Node]} <- Supervisor.which_children(__MODULE__) do
-      Node.node(pid)
+      Node.get_node(pid)
+    end
+    |> Enum.filter(fn n -> n.parent == nil end)
+  end
+
+  @doc """
+  Return the root node of each child.
+  """
+  def list_all() do
+    for {:undefined, pid, :worker, [TreeMap.Node]} <- Supervisor.which_children(__MODULE__) do
+      Node.get_node(pid)
     end
   end
 
