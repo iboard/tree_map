@@ -23,36 +23,28 @@ defmodule TreeMap.Node do
   @doc """
   Return the `%Node{}` struct of this process.
   """
-  def get_node(pid) when is_pid(pid) do
-    GenServer.call(pid, :node)
-  end
+  def get_node(pid) when is_pid(pid), do: GenServer.call(pid, :node)
 
   def get_node(%Node{} = node), do: node
 
   @doc """
   Returns the key of the `%Node{}` struct of this process.
   """
-  def key(pid) when is_pid(pid) do
-    GenServer.call(pid, :key)
-  end
+  def key(pid) when is_pid(pid), do: GenServer.call(pid, :key)
 
   def key(%Node{key: k}), do: k
 
   @doc """
   Returns the value of the `%Node{}` struct of this process.
   """
-  def value(pid) when is_pid(pid) do
-    GenServer.call(pid, :value)
-  end
+  def value(pid) when is_pid(pid), do: GenServer.call(pid, :value)
 
   def value(%Node{value: v}), do: v
 
   @doc """
   Returns the parent of the `%Node{}` struct of this process.
   """
-  def parent(pid) when is_pid(pid) do
-    GenServer.call(pid, :parent)
-  end
+  def parent(pid) when is_pid(pid), do: GenServer.call(pid, :parent)
 
   def parent(%Node{parent: p}), do: p
 
@@ -65,24 +57,14 @@ defmodule TreeMap.Node do
   end
 
   @impl true
-  def handle_call(:node, _, %__MODULE__{} = state) do
-    {:reply, state, state}
-  end
+  def handle_call(:node, _, %__MODULE__{} = state), do: {:reply, state, state}
 
-  def handle_call(:key, _, %__MODULE__{key: key} = state) do
-    {:reply, key, state}
-  end
+  def handle_call(:key, _, %__MODULE__{key: key} = state), do: {:reply, key, state}
 
-  def handle_call(:value, _, %__MODULE__{value: value} = state) do
-    {:reply, value, state}
-  end
+  def handle_call(:value, _, %__MODULE__{value: value} = state), do: {:reply, value, state}
 
-  def handle_call(:parent, _, %__MODULE__{parent: parent} = state) do
-    {:reply, parent, state}
-  end
+  def handle_call(:parent, _, %__MODULE__{parent: parent} = state), do: {:reply, parent, state}
 
   @impl true
-  def handle_cast({:update, node}, _state) do
-    {:noreply, node}
-  end
+  def handle_cast({:update, node}, _state), do: {:noreply, node}
 end
